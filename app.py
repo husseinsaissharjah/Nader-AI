@@ -38,7 +38,6 @@ initial_sidebar_state="expanded"
 st.markdown(
 """ <style>
 
-```
 .main-title {
     text-align: center;
     font-size: 42px;
@@ -68,7 +67,7 @@ st.markdown(
 </style>
 """,
 unsafe_allow_html=True
-```
+
 
 )
 
@@ -476,7 +475,7 @@ KNOWLEDGE = [
         "systems that communicate using standardized protocols."
     )
 }
-```
+
 
 ]
 
@@ -488,7 +487,7 @@ KNOWLEDGE = [
 
 ARABIC_KNOWLEDGE = [
 
-```
+
 {
     "keywords": [
         "مرحبا",
@@ -564,7 +563,7 @@ ARABIC_KNOWLEDGE = [
         "العفو! 😊 أنا جاهز إذا بدك تسأل عن أي شيء بعرفه."
     )
 }
-```
+
 
 ]
 
@@ -589,7 +588,7 @@ FALLBACKS = [
 
 def normalize_text(text):
 
-```
+
 if not text:
     return ""
 
@@ -613,7 +612,7 @@ text = re.sub(r"[^\w\s\u0600-\u06FF]", " ", text)
 text = re.sub(r"\s+", " ", text)
 
 return text.strip()
-```
+
 
 # =========================================================
 
@@ -623,7 +622,7 @@ return text.strip()
 
 def has_word(word, text):
 
-```
+
 word = normalize_text(word)
 
 if not word:
@@ -636,7 +635,7 @@ return re.search(
     r"\b" + re.escape(word) + r"\b",
     text
 ) is not None
-```
+
 
 # =========================================================
 
@@ -646,7 +645,7 @@ return re.search(
 
 def keyword_score(text, keyword):
 
-```
+
 keyword = normalize_text(keyword)
 
 if not keyword:
@@ -682,7 +681,7 @@ for kw in keyword_words:
                 score += 2
 
 return score
-```
+
 
 # =========================================================
 
@@ -692,7 +691,7 @@ return score
 
 def entry_score(text, entry):
 
-```
+
 total = 0
 
 for keyword in entry["keywords"]:
@@ -703,7 +702,7 @@ for keyword in entry["keywords"]:
     )
 
 return total
-```
+
 
 # =========================================================
 
@@ -713,14 +712,14 @@ return total
 
 def contains_arabic(text):
 
-```
+
 return bool(
     re.search(
         r"[\u0600-\u06FF]",
         text
     )
 )
-```
+
 
 # =========================================================
 
@@ -730,7 +729,7 @@ return bool(
 
 def calculate_expression(user_input):
 
-```
+
 text = user_input.lower()
 
 replacements = {
@@ -785,7 +784,7 @@ except Exception:
     return None
 
 return None
-```
+
 
 # =========================================================
 
@@ -795,7 +794,7 @@ return None
 
 def is_calculation_request(text):
 
-```
+
 calculation_words = [
     "calculate",
     "what is",
@@ -824,7 +823,7 @@ has_word = any(
 )
 
 return has_number and (has_operator or has_word)
-```
+
 
 # =========================================================
 
@@ -834,7 +833,7 @@ return has_number and (has_operator or has_word)
 
 def conversation_response(text):
 
-```
+
 # Greeting
 greeting_words = [
     "hello",
@@ -923,7 +922,7 @@ if (
     )
 
 return None
-```
+
 
 # =========================================================
 
@@ -933,7 +932,7 @@ return None
 
 def get_reply(user_input):
 
-```
+
 if not user_input:
     return "Please type something.", 0
 
@@ -1084,7 +1083,7 @@ return (
     random.choice(FALLBACKS),
     0
 )
-```
+
 
 # =========================================================
 
@@ -1094,7 +1093,7 @@ return (
 
 if "messages" not in st.session_state:
 
-```
+
 st.session_state.messages = [
     {
         "role": "assistant",
@@ -1107,13 +1106,13 @@ st.session_state.messages = [
         )
     }
 ]
-```
+
 
 if "question_count" not in st.session_state:
 
-```
+
 st.session_state.question_count = 0
-```
+
 
 # =========================================================
 
@@ -1146,7 +1145,7 @@ unsafe_allow_html=True
 
 with st.sidebar:
 
-```
+
 st.header("🤖 Nader AI")
 
 st.write(
