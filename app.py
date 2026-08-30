@@ -80,7 +80,6 @@ unsafe_allow_html=True
 
 KNOWLEDGE = [
 
-```
 # -----------------------------------------------------
 # TECHNOLOGY
 # -----------------------------------------------------
@@ -1234,7 +1233,7 @@ if st.button(
     st.session_state.question_count = 0
 
     st.rerun()
-```
+
 
 # =========================================================
 
@@ -1244,7 +1243,6 @@ if st.button(
 
 for message in st.session_state.messages:
 
-```
 with st.chat_message(
     message["role"]
 ):
@@ -1252,7 +1250,7 @@ with st.chat_message(
     st.markdown(
         message["content"]
     )
-```
+
 
 # =========================================================
 
@@ -1266,7 +1264,6 @@ user_input = st.chat_input(
 
 if user_input:
 
-```
 # Add user message
 st.session_state.messages.append(
     {
@@ -1291,7 +1288,4 @@ st.session_state.messages.append(
 st.session_state.question_count += 1
 
 st.rerun()
-```
 
-```
-```
