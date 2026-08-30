@@ -49,7 +49,7 @@ st.markdown("""
 # =========================================================
 
 try:
-api_key = st.secrets["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"]
+api_key = st.secrets[""]
 except Exception:
 api_key = ""
 
