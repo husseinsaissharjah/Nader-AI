@@ -1,341 +1,174 @@
-import streamlit as st
-from openai import OpenAI
+import random
+import re
+from difflib import get_close_matches
 
-st.set_page_config(
-page_title="Nader AI",
-page_icon="🤖",
-layout="wide",
-initial_sidebar_state="expanded"
-)
+BOT_NAME = "MiniChat"
+TOPICS = ["technology", "football"]
 
-st.markdown("""
-
-<style>
-.stApp {
-    background-color: #f7f9fc;
-}
-
-.nader-header {
-    text-align: center;
-    padding: 30px 10px 20px 10px;
-}
-
-.nader-title {
-    font-size: 44px;
-    font-weight: 800;
-}
-
-.nader-subtitle {
-    font-size: 17px;
-    color: #667085;
-}
-
-.footer {
-    text-align: center;
-    color: #98a2b3;
-    font-size: 13px;
-    margin-top: 40px;
-    padding-bottom: 20px;
-}
-
-</style>
-
-""", unsafe_allow_html=True)
-
-# =========================================================
-
-# OPENAI API KEY
-
-# =========================================================
-
-try:
-api_key = st.secrets[""]
-except Exception:
-api_key = ""
-
-if not api_key:
-st.error("⚠️ Nader AI is not connected to OpenAI yet.")
-st.info(
-"Go to your Streamlit app settings → Secrets and add:\n\n"
-"OPENAI_API_KEY = "your-api-key""
-)
-st.stop()
-
-client = OpenAI(api_key=api_key)
-
-# =========================================================
-
-# MODEL
-
-# =========================================================
-
-MODEL = "gpt-5.6"
-
-# =========================================================
-
-# NADER AI INSTRUCTIONS
-
-# =========================================================
-
-SYSTEM_PROMPT = """
-You are Nader AI, a friendly and intelligent general-purpose AI assistant.
-
-Your name is Nader AI.
-
-You can help with:
-
-* General knowledge
-* Current events
-* News
-* Football and sports
-* Mathematics
-* Education
-* Science
-* Technology
-* Programming
-* History
-* Geography
-* Business
-* Travel
-* Writing
-* Everyday life questions
-
-Rules:
-
-1. Answer naturally and conversationally.
-2. Be accurate and useful.
-3. Never invent facts.
-4. For current or recent information, use web search when available.
-5. This includes today's news, football results, transfers, fixtures,
-   standings, injuries, current events, weather and current prices.
-6. Explain mathematics step by step when appropriate.
-7. Adapt explanations to the user's level.
-8. Keep simple answers concise.
-9. Give more detail when the question requires it.
-10. If you don't know something, say so.
-11. Answer in English or Arabic according to the user's language.
-12. Lebanese Arabic can be answered naturally in Lebanese Arabic.
-13. Be friendly and professional.
-14. Clearly identify opinions as opinions.
-15. Do not pretend old information is current.
-    """
-
-# =========================================================
-
-# SESSION STATE
-
-# =========================================================
-
-if "messages" not in st.session_state:
-st.session_state.messages = []
-
-if "web_enabled" not in st.session_state:
-st.session_state.web_enabled = True
-
-# =========================================================
-
-# SIDEBAR
-
-# =========================================================
-
-with st.sidebar:
-
-```
-st.markdown("## 🤖 Nader AI")
-
-st.write(
-    "Your AI assistant for knowledge, education, "
-    "football, news and everyday questions."
-)
-
-st.divider()
-
-st.markdown("### ⚙️ Settings")
-
-st.session_state.web_enabled = st.toggle(
-    "🌐 Web Search",
-    value=st.session_state.web_enabled
-)
-
-st.divider()
-
-if st.button("🗑️ New Conversation", use_container_width=True):
-    st.session_state.messages = []
-    st.rerun()
-
-st.divider()
-
-st.markdown("### 💡 Try asking")
-
-st.caption("⚽ What is the latest football news?")
-st.caption("📰 What are today's biggest news stories?")
-st.caption("📐 Explain derivatives simply.")
-st.caption("💻 Help me write Python code.")
-st.caption("🌍 What is happening in the world today?")
-st.caption("🧠 Give me a challenging math problem.")
-
-st.divider()
-
-st.caption("Nader AI")
-```
-
-# =========================================================
-
-# HEADER
-
-# =========================================================
-
-st.markdown("""
-
-<div class="nader-header">
-
-<div class="nader-title">
-🤖 Nader AI
-</div>
-
-<div class="nader-subtitle">
-Ask me anything — news, football, education, technology and more.
-</div>
-
-</div>
-""", unsafe_allow_html=True)
-
-# =========================================================
-
-# WELCOME SCREEN
-
-# =========================================================
-
-if len(st.session_state.messages) == 0:
-
-```
-st.markdown("### 👋 Hello!")
-
-st.write(
-    "I'm Nader AI. Ask me anything about knowledge, "
-    "education, football, news, technology or everyday life."
-)
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.info(
-        "⚽ Football\n\n"
-        "Results, fixtures, transfers, players and teams."
-    )
-
-with col2:
-    st.info(
-        "📰 Current News\n\n"
-        "Recent events and what is happening now."
-    )
-
-with col3:
-    st.info(
-        "📚 Learning\n\n"
-        "Math, science, programming and explanations."
-    )
-```
-
-# =========================================================
-
-# SHOW CHAT HISTORY
-
-# =========================================================
-
-for message in st.session_state.messages:
-
-```
-with st.chat_message(message["role"]):
-    st.markdown(message["content"])
-```
-
-# =========================================================
-
-# CHAT INPUT
-
-# =========================================================
-
-user_input = st.chat_input("Message Nader AI...")
-
-# =========================================================
-
-# PROCESS USER QUESTION
-
-# =========================================================
-
-if user_input:
-
-```
-st.session_state.messages.append(
+KNOWLEDGE = [
     {
-        "role": "user",
-        "content": user_input
-    }
-)
-
-with st.chat_message("user"):
-    st.markdown(user_input)
-
-with st.chat_message("assistant"):
-
-    try:
-
-        with st.spinner("Nader is thinking..."):
-
-            if st.session_state.web_enabled:
-
-                response = client.responses.create(
-                    model=MODEL,
-                    instructions=SYSTEM_PROMPT,
-                    input=st.session_state.messages,
-                    tools=[
-                        {
-                            "type": "web_search"
-                        }
-                    ]
-                )
-
-            else:
-
-                response = client.responses.create(
-                    model=MODEL,
-                    instructions=SYSTEM_PROMPT,
-                    input=st.session_state.messages
-                )
-
-            answer = response.output_text
-
-            if not answer:
-                answer = "I couldn't generate an answer. Please try again."
-
-    except Exception as e:
-
-        answer = (
-            "⚠️ Nader AI encountered an error.\n\n"
-            "Please check your API key and settings.\n\n"
-            "Error: " + str(e)
-        )
-
-    st.markdown(answer)
-
-st.session_state.messages.append(
+        "keywords": ["technology", "tech"],
+        "answer": "Technology is about using computers, software, and systems to solve problems. I know a little about Python, AI, cybersecurity, cloud, databases, and APIs."
+    },
     {
-        "role": "assistant",
-        "content": answer
+        "keywords": ["python"],
+        "answer": "Python is a popular programming language used for web development, automation, data analysis, AI, and scripting."
+    },
+    {
+        "keywords": ["ai", "artificial intelligence"],
+        "answer": "AI means artificial intelligence. It allows software to do smart tasks like understanding language, recognizing images, or making predictions."
+    },
+    {
+        "keywords": ["machine learning", "ml"],
+        "answer": "Machine learning is a part of AI where a computer learns patterns from data instead of being given every rule manually."
+    },
+    {
+        "keywords": ["cybersecurity", "security", "hacking"],
+        "answer": "Cybersecurity protects systems and data from attacks. Basic safety steps include strong passwords, two-factor authentication, updates, and backups."
+    },
+    {
+        "keywords": ["cloud", "cloud computing", "aws", "azure", "google cloud"],
+        "answer": "Cloud computing means using remote servers over the internet for storage, apps, databases, and computing power. Examples are AWS, Azure, and Google Cloud."
+    },
+    {
+        "keywords": ["database", "sql"],
+        "answer": "A database stores organized data. SQL databases like MySQL, PostgreSQL, and SQLite store data in tables."
+    },
+    {
+        "keywords": ["api"],
+        "answer": "An API lets two programs communicate. For example, a weather app can use an API to get weather data from a server."
+    },
+
+    {
+        "keywords": ["football", "soccer"],
+        "answer": "Football, also called soccer in some countries, is a team game where players try to score goals. A normal match is 90 minutes plus added time."
+    },
+    {
+        "keywords": ["messi", "lionel messi"],
+        "answer": "Lionel Messi is an Argentine footballer known for dribbling, passing, free kicks, and playmaking. He won the FIFA World Cup with Argentina in 2022."
+    },
+    {
+        "keywords": ["ronaldo", "cristiano ronaldo"],
+        "answer": "Cristiano Ronaldo is a Portuguese footballer known for goal scoring, fitness, and a long career at the top level."
+    },
+    {
+        "keywords": ["world cup", "fifa world cup"],
+        "answer": "The FIFA World Cup is the biggest international football tournament. It is held every four years, and Argentina won the 2022 World Cup."
+    },
+    {
+        "keywords": ["champions league", "ucl"],
+        "answer": "The UEFA Champions League is a top European club football competition played by the best teams from European leagues."
+    },
+    {
+        "keywords": ["premier league", "epl"],
+        "answer": "The Premier League is the top professional football league in England."
+    },
+    {
+        "keywords": ["offside"],
+        "answer": "In football, offside usually means an attacking player is closer to the opponent's goal than the ball or the second-last defender when the pass is made."
+    },
+    {
+        "keywords": ["penalty"],
+        "answer": "A penalty is a direct kick from the penalty spot, awarded after a serious foul inside the penalty box."
+    },
+    {
+        "keywords": ["var"],
+        "answer": "VAR means Video Assistant Referee. It helps referees review big decisions like goals, penalties, red cards, and mistaken identity."
     }
-)
-```
+]
 
-# =========================================================
+FALLBACKS = [
+    "I don't know that yet. I only know a little about technology and football.",
+    "Please ask me about technology or football.",
+    "Try asking: What is Python? What is AI? Who is Messi? What is VAR?"
+]
 
-# FOOTER
+def clean_text(text):
+    text = text.lower().strip()
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text
 
-# =========================================================
+def has_word(word, text):
+    return re.search(r"\b" + re.escape(word) + r"\b", text) is not None
 
-st.markdown(
-""" <div class="footer">
-Nader AI • Your intelligent AI assistant </div>
-""",
-unsafe_allow_html=True
-)
+def score_keywords(text, keywords):
+    score = 0
+
+    for keyword in keywords:
+        keyword = clean_text(keyword)
+
+        if not keyword:
+            continue
+
+        if " " in keyword:
+            if keyword in text:
+                score += 3
+        elif has_word(keyword, text):
+            score += 2
+
+    return score
+
+def get_reply(user_input):
+    text = clean_text(user_input)
+
+    if not text:
+        return "Please type something."
+
+    if any(has_word(word, text) for word in ["hello", "hi", "hey"]):
+        return "Hello! Ask me about technology or football."
+
+    if "how are you" in text:
+        return "I'm good. Ask me a technology or football question."
+
+    if "your name" in text:
+        return f"I am {BOT_NAME}, a simple chat-only bot."
+
+    if "help" in text or "what can you do" in text:
+        return f"I can chat about {', '.join(TOPICS)}. Try: What is Python? What is AI? Who is Messi? What is VAR?"
+
+    best_entry = None
+    best_score = 0
+
+    for entry in KNOWLEDGE:
+        score = score_keywords(text, entry["keywords"])
+
+        if score > best_score:
+            best_score = score
+            best_entry = entry
+
+    if best_entry:
+        return best_entry["answer"]
+
+    all_keywords = []
+    keyword_to_entry = {}
+
+    for entry in KNOWLEDGE:
+        for keyword in entry["keywords"]:
+            keyword_clean = clean_text(keyword)
+            all_keywords.append(keyword_clean)
+            keyword_to_entry[keyword_clean] = entry
+
+    for word in text.split():
+        close = get_close_matches(word, all_keywords, n=1, cutoff=0.85)
+
+        if close:
+            return keyword_to_entry[close[0]]["answer"]
+
+    return random.choice(FALLBACKS)
+
+def main():
+    print(f"{BOT_NAME}: Hello! I only chat about {', '.join(TOPICS)}.")
+    print("Type 'exit' to quit.")
+
+    while True:
+        user_input = input("You: ")
+
+        if user_input.lower().strip() in ["exit", "quit", "bye"]:
+            print(f"{BOT_NAME}: Goodbye!")
+            break
+
+        print(f"{BOT_NAME}: {get_reply(user_input)}")
+
+if __name__ == "__main__":
+    main()
