@@ -590,7 +590,7 @@ def normalize_text(text):
 
 
 if not text:
-    return ""
+    return "0"
 
 text = text.lower().strip()
 
