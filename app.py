@@ -1,4 +1,4 @@
-```python
+
 import streamlit as st
 import random
 import re
@@ -457,4 +457,4 @@ with st.sidebar:
         ]
 
         st.rerun()
-```
+
